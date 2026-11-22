@@ -307,6 +307,8 @@ Output from Benchmark mode. Located at `benchmarks/<timestamp>/benchmark.json`.
 
 **Important:** The viewer reads these field names exactly. Using `config` instead of `configuration`, or putting `pass_rate` at the top level of a run instead of nested under `result`, will cause the viewer to show empty/zero values. Always reference this schema when generating benchmark.json manually.
 
+A benchmark directory with no usable runs produces no `benchmark.json`: `aggregate_benchmark.py` exits non-zero and names the directory on stderr instead of writing zeroed statistics.
+
 ---
 
 ## comparison.json

@@ -228,7 +228,9 @@ Unreadable, non-UTF-8, malformed, or non-object `timing.json` data emits a warni
 and is treated as missing measurements. Its token and duration fields accept finite,
 non-negative numbers (including zero); invalid fields emit a warning naming the file
 and field and use the existing fallback independently, preserving valid measurements
-and other runs.
+and other runs. A benchmark directory that yields no runs at all is a failure rather
+than a report: the aggregator writes no files there and exits non-zero, so an empty
+directory cannot be mistaken for a measured 0% pass rate.
 
 `SKILL.md` YAML frontmatter must open and close with `---` on its own line (trailing spaces or tabs are allowed). A line such as `---suffix` is not a closing delimiter.
 
