@@ -385,11 +385,21 @@ def main():
     args = parser.parse_args()
 
     if not args.benchmark_dir.exists():
-        print(f"Directory not found: {args.benchmark_dir}")
+        print(f"Directory not found: {args.benchmark_dir}", file=sys.stderr)
         sys.exit(1)
 
     # Generate benchmark
     benchmark = generate_benchmark(args.benchmark_dir, args.skill_name, args.skill_path)
+
+    # An empty aggregate is not a benchmark: zeroed means would be read as a
+    # real 0% pass rate with no runs behind it. Report the missing data instead
+    # of writing reports, and fail so a caller can tell the two apart.
+    if not benchmark["runs"]:
+        print(
+            f"No benchmark runs found in {args.benchmark_dir}; no report written",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     # Determine output paths
     output_json = args.output or (args.benchmark_dir / "benchmark.json")
