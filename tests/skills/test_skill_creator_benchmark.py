@@ -19,6 +19,13 @@ def benchmark_script():
     return runpy.run_path(str(script))
 
 
+def benchmark_script_path():
+    return (
+        Path(__file__).resolve().parents[2]
+        / "skills/public/skill-creator/scripts/aggregate_benchmark.py"
+    )
+
+
 def write_run(
     root, *, grading_timing=None, timing=None, config="with_skill", run_number=1
 ):
@@ -414,3 +421,47 @@ def test_recorded_tokens_propagate_to_summary_delta_and_markdown(
     assert "| Tokens | 84852 ± 0 | 10000 ± 0 | +74852 |" in benchmark_script[
         "generate_markdown"
     ](benchmark)
+
+
+@pytest.mark.parametrize(
+    "relative_paths",
+    [[], ["eval-1/with_skill"], ["eval-1/with_skill/run-1"]],
+    ids=["empty-dir", "no-run-dirs", "no-grading"],
+)
+def test_cli_fails_without_runs_and_writes_no_report(tmp_path, relative_paths):
+    # Zero runs must not become a "0% pass rate" report that looks like a real
+    # measurement, so the CLI fails instead of writing benchmark files.
+    for relative_path in relative_paths:
+        (tmp_path / relative_path).mkdir(parents=True)
+
+    completed = subprocess.run(
+        [sys.executable, benchmark_script_path(), str(tmp_path)],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+
+    assert completed.returncode == 1
+    assert "No benchmark runs found" in completed.stderr
+    assert str(tmp_path) in completed.stderr
+    assert "Generated:" not in completed.stdout
+    assert not (tmp_path / "benchmark.json").exists()
+    assert not (tmp_path / "benchmark.md").exists()
+
+
+def test_cli_reports_a_missing_directory_on_stderr(tmp_path):
+    missing = tmp_path / "absent"
+
+    completed = subprocess.run(
+        [sys.executable, benchmark_script_path(), str(missing)],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+
+    assert completed.returncode == 1
+    assert completed.stdout == ""
+    assert f"Directory not found: {missing}" in completed.stderr
+    assert not missing.exists()

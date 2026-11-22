@@ -191,6 +191,12 @@ The [music-generation skill](../../skills/public/music-generation/SKILL.md#outpu
 The bundled skill-creator trigger evaluator drains CLI output through EOF, so a completed subprocess does not turn a recorded skill trigger into a false negative.
 The bundled skill-creator description optimizer reads YAML frontmatter consistently with skill validation, preserving quoted strings and multiline descriptions. Its scripts require PyYAML, as does the skill package validator. Invalid skill metadata is reported on stderr with a nonzero exit status rather than a traceback.
 
+The bundled skill-creator benchmark aggregator refuses to report on a directory
+that yields no runs: it names the directory on stderr, writes neither
+`benchmark.json` nor `benchmark.md`, and exits nonzero. A mistyped or
+never-populated iteration directory therefore cannot be recorded as a measured
+0% pass rate, and the viewer is never handed a report with nothing behind it.
+
 Skills are loaded progressively — only when the task needs them, not all at once. This keeps the context window lean and makes DeerFlow work well even with token-sensitive models.
 
 The bundled video-generation command reports failures on stderr and exits with
